@@ -106,21 +106,21 @@ export default function IdeasPage() {
               idea.isFaded ? "opacity-40" : ""
             }`}
           >
-            <div className="flex items-start gap-3">
-              <div className="flex flex-col items-center gap-1 shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col items-center shrink-0">
                 <button
                   onClick={(e) => vote(idea.id, "up", e)}
-                  className="text-silver-mist/60 hover:text-marker-blue text-xs leading-none"
+                  className="px-2 py-1 border border-slate-gray text-silver-mist/60 hover:text-marker-blue hover:border-marker-blue transition-colors text-sm leading-none"
                   aria-label="Upvote"
                 >
                   ▲
                 </button>
-                <span className="text-sm font-medium text-white min-w-[20px] text-center">
+                <span className="text-sm font-medium text-white min-w-[28px] text-center py-1">
                   {idea.voteScore}
                 </span>
                 <button
                   onClick={(e) => vote(idea.id, "down", e)}
-                  className="text-silver-mist/60 hover:text-accent-red text-xs leading-none"
+                  className="px-2 py-1 border border-slate-gray text-silver-mist/60 hover:text-accent-red hover:border-accent-red transition-colors text-sm leading-none"
                   aria-label="Downvote"
                 >
                   ▼
@@ -128,11 +128,14 @@ export default function IdeasPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-white font-medium truncate">{idea.title}</h3>
-                <div className="flex gap-3 text-xs text-silver-mist/60 mt-1">
-                  <span>{idea.viewCount} views</span>
-                  <span>{idea.links.length} links</span>
-                </div>
               </div>
+              <span className="flex items-center gap-1 text-xs text-silver-mist/60 shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                  <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+                  <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                </svg>
+                {idea.viewCount}
+              </span>
             </div>
           </Link>
         ))}
