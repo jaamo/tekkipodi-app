@@ -153,7 +153,14 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
         title="Idea"
         back
         action={
-          <div className="flex gap-2">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1 text-silver-mist/60 text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+                <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+              </svg>
+              {idea?.viewCount ?? 0}
+            </span>
             <Link
               href={`/ideas/${id}/chat`}
               className="px-3 py-1 border border-slate-gray text-silver-mist hover:border-marker-blue text-sm transition-colors"
@@ -193,28 +200,6 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
       )}
 
       <div className="px-4 space-y-6">
-        {/* Vote + Stats */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => vote("up")}
-              className="px-2 py-1 border border-slate-gray text-silver-mist hover:border-marker-blue hover:text-marker-blue transition-colors"
-            >
-              ▲
-            </button>
-            <span className="text-white font-medium min-w-[28px] text-center">
-              {idea.voteScore}
-            </span>
-            <button
-              onClick={() => vote("down")}
-              className="px-2 py-1 border border-slate-gray text-silver-mist hover:border-accent-red hover:text-accent-red transition-colors"
-            >
-              ▼
-            </button>
-          </div>
-          <span className="text-xs text-silver-mist/60">{idea.viewCount} views</span>
-        </div>
-
         {/* Title */}
         <input
           type="text"
@@ -236,6 +221,25 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
             placeholder="Add notes..."
           />
           {saving && <span className="text-xs text-silver-mist/40">Saving...</span>}
+        </div>
+
+        {/* Vote */}
+        <div className="flex w-full">
+          <button
+            onClick={() => vote("up")}
+            className="flex-1 py-2 border border-slate-gray text-silver-mist hover:border-marker-blue hover:text-marker-blue transition-colors text-sm"
+          >
+            ▲ Up
+          </button>
+          <div className="flex items-center justify-center px-4 border-y border-slate-gray text-white font-medium min-w-[48px]">
+            {idea.voteScore}
+          </div>
+          <button
+            onClick={() => vote("down")}
+            className="flex-1 py-2 border border-slate-gray text-silver-mist hover:border-accent-red hover:text-accent-red transition-colors text-sm"
+          >
+            ▼ Down
+          </button>
         </div>
 
         {/* Links */}
