@@ -15,6 +15,7 @@ interface IdeaInEpisode {
 
 interface EpisodeData {
   id: string;
+  episodeNumber: number;
   title: string;
   ideas: IdeaInEpisode[];
 }
@@ -24,6 +25,7 @@ export default function EpisodeDetailPage({ params }: { params: Promise<{ id: st
   const router = useRouter();
   const [episode, setEpisode] = useState<EpisodeData | null>(null);
   const [title, setTitle] = useState("");
+  const [episodeNumber, setEpisodeNumber] = useState(0);
   const [showNotes, setShowNotes] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -33,6 +35,7 @@ export default function EpisodeDetailPage({ params }: { params: Promise<{ id: st
       const data = await res.json();
       setEpisode(data);
       setTitle(data.title);
+      setEpisodeNumber(data.episodeNumber);
     }
   }, [id]);
 
@@ -46,6 +49,15 @@ export default function EpisodeDetailPage({ params }: { params: Promise<{ id: st
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: title.trim() }),
+    });
+  }
+
+  async function saveEpisodeNumber() {
+    if (!episodeNumber || episodeNumber === episode?.episodeNumber) return;
+    await fetch(`/api/episodes/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ episodeNumber }),
     });
   }
 
@@ -130,14 +142,24 @@ export default function EpisodeDetailPage({ params }: { params: Promise<{ id: st
       )}
 
       <div className="px-4">
-        {/* Title */}
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onBlur={saveTitle}
-          className="w-full text-xl font-semibold text-white bg-transparent outline-none border-b border-transparent focus:border-marker-blue pb-1 mb-4"
-        />
+        {/* Episode number and title */}
+        <div className="flex items-baseline gap-2 mb-4">
+          <span className="text-silver-mist/60 text-xl">#</span>
+          <input
+            type="number"
+            value={episodeNumber}
+            onChange={(e) => setEpisodeNumber(parseInt(e.target.value) || 0)}
+            onBlur={saveEpisodeNumber}
+            className="w-16 text-xl font-semibold text-white bg-transparent outline-none border-b border-transparent focus:border-marker-blue pb-1"
+          />
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onBlur={saveTitle}
+            className="flex-1 text-xl font-semibold text-white bg-transparent outline-none border-b border-transparent focus:border-marker-blue pb-1"
+          />
+        </div>
 
         {showNotes ? (
           /* Combined Notes View */

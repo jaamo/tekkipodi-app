@@ -6,6 +6,7 @@ import PageHeader from "@/components/layout/PageHeader";
 
 interface Episode {
   id: string;
+  episodeNumber: number;
   title: string;
   ideaCount: number;
   createdAt: string;
@@ -89,7 +90,10 @@ export default function EpisodesPage() {
             href={`/episodes/${episode.id}`}
             className="block border border-slate-gray p-3 transition-colors hover:border-silver-mist/30"
           >
-            <h3 className="text-white font-medium">{episode.title}</h3>
+            <h3 className="text-white font-medium">
+              <span className="text-silver-mist/60 mr-2">#{episode.episodeNumber}</span>
+              {episode.title}
+            </h3>
             <span className="text-xs text-silver-mist/60">
               {episode.ideaCount} {episode.ideaCount === 1 ? "idea" : "ideas"}
             </span>

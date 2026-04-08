@@ -43,12 +43,13 @@ model Link {
 }
 
 model Episode {
-  id        String   @id @default(cuid())
-  title     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  episodeNumber Int      @unique
+  title         String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  ideas     Idea[]
+  ideas         Idea[]
 }
 
 model ChatMessage {

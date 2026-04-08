@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import PageHeader from "@/components/layout/PageHeader";
 
@@ -15,6 +16,7 @@ interface Idea {
 }
 
 export default function IdeasPage() {
+  const router = useRouter();
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [newTitle, setNewTitle] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -39,9 +41,8 @@ export default function IdeasPage() {
     });
 
     if (res.ok) {
-      setNewTitle("");
-      setShowForm(false);
-      loadIdeas();
+      const idea = await res.json();
+      router.push(`/ideas/${idea.id}`);
     }
   }
 
