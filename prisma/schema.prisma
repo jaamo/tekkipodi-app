@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Idea {
+  id             String    @id @default(cuid())
+  title          String
+  notes          String    @default("")
+  voteScore      Int       @default(0)
+  viewCount      Int       @default(0)
+  lastTouchedAt  DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  episodeId      String?
+  episode        Episode?  @relation(fields: [episodeId], references: [id])
+  orderInEpisode Int?
+
+  links          Link[]
+  chatMessages   ChatMessage[]
+
+  @@index([episodeId])
+  @@index([lastTouchedAt])
+}
+
+model Link {
+  id          String   @id @default(cuid())
+  url         String
+  title       String?
+  summary     String?
+  crawlStatus String   @default("pending")
+  rawContent  String?
+  createdAt   DateTime @default(now())
+
+  ideaId      String
+  idea        Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+
+  @@index([ideaId])
+}
+
+model Episode {
+  id        String   @id @default(cuid())
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ideas     Idea[]
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+
+  ideaId    String
+  idea      Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+
+  @@index([ideaId])
+  @@index([createdAt])
+}

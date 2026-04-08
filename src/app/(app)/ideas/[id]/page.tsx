@@ -1,0 +1,338 @@
+"use client";
+
+import { useEffect, useState, useCallback, use } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import PageHeader from "@/components/layout/PageHeader";
+import ReactMarkdown from "react-markdown";
+
+interface LinkData {
+  id: string;
+  url: string;
+  title: string | null;
+  summary: string | null;
+  crawlStatus: string;
+}
+
+interface Episode {
+  id: string;
+  title: string;
+}
+
+interface IdeaData {
+  id: string;
+  title: string;
+  notes: string;
+  voteScore: number;
+  viewCount: number;
+  episodeId: string | null;
+  links: LinkData[];
+}
+
+export default function IdeaDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const router = useRouter();
+  const [idea, setIdea] = useState<IdeaData | null>(null);
+  const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [title, setTitle] = useState("");
+  const [notes, setNotes] = useState("");
+  const [newUrl, setNewUrl] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [showAssign, setShowAssign] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const loadIdea = useCallback(async () => {
+    const res = await fetch(`/api/ideas/${id}`);
+    if (res.ok) {
+      const data = await res.json();
+      setIdea(data);
+      setTitle(data.title);
+      setNotes(data.notes);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    loadIdea();
+  }, [loadIdea]);
+
+  // Poll for pending links
+  useEffect(() => {
+    if (!idea?.links.some((l) => l.crawlStatus === "pending" || l.crawlStatus === "crawling")) return;
+
+    const interval = setInterval(async () => {
+      const res = await fetch(`/api/ideas/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setIdea(data);
+        if (!data.links.some((l: LinkData) => l.crawlStatus === "pending" || l.crawlStatus === "crawling")) {
+          clearInterval(interval);
+        }
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [idea?.links, id]);
+
+  async function saveNotes() {
+    setSaving(true);
+    await fetch(`/api/ideas/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, notes }),
+    });
+    setSaving(false);
+  }
+
+  async function addLink(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newUrl.trim()) return;
+
+    await fetch(`/api/ideas/${id}/links`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: newUrl.trim() }),
+    });
+
+    setNewUrl("");
+    loadIdea();
+  }
+
+  async function deleteLink(linkId: string) {
+    await fetch(`/api/ideas/${id}/links/${linkId}`, { method: "DELETE" });
+    loadIdea();
+  }
+
+  async function vote(direction: "up" | "down") {
+    const res = await fetch(`/api/ideas/${id}/vote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ direction }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setIdea((prev) => (prev ? { ...prev, voteScore: data.voteScore } : null));
+    }
+  }
+
+  async function deleteIdea() {
+    await fetch(`/api/ideas/${id}`, { method: "DELETE" });
+    router.push("/ideas");
+  }
+
+  async function assignToEpisode(episodeId: string) {
+    await fetch(`/api/ideas/${id}/assign`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ episodeId }),
+    });
+    router.push("/ideas");
+  }
+
+  async function unassign() {
+    await fetch(`/api/ideas/${id}/assign`, { method: "DELETE" });
+    loadIdea();
+  }
+
+  async function loadEpisodes() {
+    const res = await fetch("/api/episodes");
+    if (res.ok) setEpisodes(await res.json());
+    setShowAssign(true);
+  }
+
+  if (!idea) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <span className="text-silver-mist/50">Loading...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <PageHeader
+        title="Idea"
+        back
+        action={
+          <div className="flex gap-2">
+            <Link
+              href={`/ideas/${id}/chat`}
+              className="px-3 py-1 border border-slate-gray text-silver-mist hover:border-marker-blue text-sm transition-colors"
+            >
+              Think
+            </Link>
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="px-3 py-1 border border-slate-gray text-accent-red hover:border-accent-red text-sm transition-colors"
+            >
+              Delete
+            </button>
+          </div>
+        }
+      />
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-gray border border-silver-mist/20 p-4 w-full max-w-sm">
+            <p className="text-white mb-4">Delete this idea?</p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-3 py-1 border border-slate-gray text-silver-mist hover:border-silver-mist text-sm transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={deleteIdea}
+                className="px-3 py-1 border border-accent-red text-accent-red hover:bg-accent-red hover:text-white text-sm transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="px-4 space-y-6">
+        {/* Vote + Stats */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => vote("up")}
+              className="px-2 py-1 border border-slate-gray text-silver-mist hover:border-marker-blue hover:text-marker-blue transition-colors"
+            >
+              ▲
+            </button>
+            <span className="text-white font-medium min-w-[28px] text-center">
+              {idea.voteScore}
+            </span>
+            <button
+              onClick={() => vote("down")}
+              className="px-2 py-1 border border-slate-gray text-silver-mist hover:border-accent-red hover:text-accent-red transition-colors"
+            >
+              ▼
+            </button>
+          </div>
+          <span className="text-xs text-silver-mist/60">{idea.viewCount} views</span>
+        </div>
+
+        {/* Title */}
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onBlur={saveNotes}
+          className="w-full text-xl font-semibold text-white bg-transparent outline-none border-b border-transparent focus:border-marker-blue pb-1"
+        />
+
+        {/* Notes */}
+        <div>
+          <label className="text-xs text-silver-mist/60 uppercase tracking-wide">Notes</label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            onBlur={saveNotes}
+            rows={6}
+            className="w-full mt-1 px-3 py-2 bg-transparent border border-slate-gray text-silver-mist placeholder:text-silver-mist/50 outline-none focus:border-marker-blue resize-y"
+            placeholder="Add notes..."
+          />
+          {saving && <span className="text-xs text-silver-mist/40">Saving...</span>}
+        </div>
+
+        {/* Links */}
+        <div>
+          <label className="text-xs text-silver-mist/60 uppercase tracking-wide">Links</label>
+          <form onSubmit={addLink} className="flex gap-2 mt-1">
+            <input
+              type="url"
+              value={newUrl}
+              onChange={(e) => setNewUrl(e.target.value)}
+              placeholder="https://..."
+              className="flex-1 px-3 py-2 bg-transparent border border-slate-gray text-silver-mist placeholder:text-silver-mist/50 outline-none focus:border-marker-blue"
+            />
+            <button
+              type="submit"
+              className="px-3 py-2 border border-slate-gray text-silver-mist hover:border-marker-blue transition-colors"
+            >
+              Add
+            </button>
+          </form>
+
+          <div className="mt-2 space-y-2">
+            {idea.links.map((link) => (
+              <div key={link.id} className="border border-slate-gray p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-marker-blue text-sm hover:underline truncate flex-1"
+                  >
+                    {link.title || link.url}
+                  </a>
+                  <button
+                    onClick={() => deleteLink(link.id)}
+                    className="text-silver-mist/40 hover:text-accent-red text-xs shrink-0"
+                  >
+                    ✕
+                  </button>
+                </div>
+                {link.crawlStatus === "done" && link.summary && (
+                  <div className="text-xs text-silver-mist/70 mt-2 prose prose-invert prose-xs max-w-none [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_li]:my-0.5 [&_p]:my-1 [&_strong]:text-silver-mist">
+                    <ReactMarkdown>{link.summary}</ReactMarkdown>
+                  </div>
+                )}
+                {(link.crawlStatus === "pending" || link.crawlStatus === "crawling") && (
+                  <p className="text-xs text-silver-mist/40 mt-2 animate-pulse">
+                    Summarizing...
+                  </p>
+                )}
+                {link.crawlStatus === "failed" && (
+                  <p className="text-xs text-accent-red/70 mt-2">
+                    Failed to crawl
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Assign to Episode */}
+        <div>
+          {idea.episodeId ? (
+            <button
+              onClick={unassign}
+              className="w-full px-3 py-2 border border-slate-gray text-silver-mist hover:border-accent-red text-sm transition-colors"
+            >
+              Remove from episode
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={loadEpisodes}
+                className="w-full px-3 py-2 border border-slate-gray text-silver-mist hover:border-marker-blue text-sm transition-colors"
+              >
+                Add to episode
+              </button>
+              {showAssign && (
+                <div className="mt-2 space-y-1">
+                  {episodes.length === 0 && (
+                    <p className="text-xs text-silver-mist/50">No episodes yet. Create one first.</p>
+                  )}
+                  {episodes.map((ep) => (
+                    <button
+                      key={ep.id}
+                      onClick={() => assignToEpisode(ep.id)}
+                      className="w-full px-3 py-2 border border-slate-gray text-left text-silver-mist hover:border-marker-blue text-sm transition-colors"
+                    >
+                      {ep.title}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
