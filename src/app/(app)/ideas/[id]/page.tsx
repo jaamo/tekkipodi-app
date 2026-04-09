@@ -199,7 +199,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       )}
 
-      <div className="px-4 space-y-6">
+      <div className="px-4 pt-4">
         {/* Title */}
         <input
           type="text"
@@ -208,7 +208,9 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
           onBlur={saveNotes}
           className="w-full text-xl font-semibold text-white bg-transparent outline-none border-b border-transparent focus:border-marker-blue pb-1"
         />
+      </div>
 
+      <div className="px-4 space-y-6">
         {/* Notes */}
         <div>
           <label className="text-xs text-silver-mist/60 uppercase tracking-wide">Notes</label>
