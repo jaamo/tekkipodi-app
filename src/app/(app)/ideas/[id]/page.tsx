@@ -25,6 +25,7 @@ interface IdeaData {
   notes: string;
   voteScore: number;
   viewCount: number;
+  archivedAt: string | null;
   episodeId: string | null;
   links: LinkData[];
 }
@@ -140,6 +141,11 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
     setShowAssign(true);
   }
 
+  async function archiveIdea() {
+    await fetch(`/api/ideas/${id}/archive`, { method: "POST" });
+    router.push("/ideas");
+  }
+
   async function polishNotes() {
     setPolishing(true);
     const res = await fetch(`/api/ideas/${id}/polish`, { method: "POST" });
@@ -179,12 +185,22 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
             >
               Think
             </Link>
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="px-3 py-1 border border-slate-gray text-accent-red hover:border-accent-red text-sm transition-colors"
-            >
-              Delete
-            </button>
+            {!idea?.archivedAt && (
+              <button
+                onClick={archiveIdea}
+                className="px-3 py-1 border border-slate-gray text-silver-mist hover:border-marker-blue text-sm transition-colors"
+              >
+                Archive
+              </button>
+            )}
+            {idea?.archivedAt && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="px-3 py-1 border border-slate-gray text-accent-red hover:border-accent-red text-sm transition-colors"
+              >
+                Delete
+              </button>
+            )}
           </div>
         }
       />

@@ -14,6 +14,7 @@ model Idea {
   viewCount      Int       @default(0)
   lastTouchedAt  DateTime  @default(now())
   createdAt      DateTime  @default(now())
+  archivedAt     DateTime?
   updatedAt      DateTime  @updatedAt
 
   episodeId      String?

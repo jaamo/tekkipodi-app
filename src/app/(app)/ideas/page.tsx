@@ -62,12 +62,20 @@ export default function IdeasPage() {
       <PageHeader
         title="Ideas"
         action={
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="px-3 py-1 border border-slate-gray text-silver-mist hover:border-marker-blue text-sm transition-colors"
-          >
-            {showForm ? "Cancel" : "+ New"}
-          </button>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/ideas/archived"
+              className="px-3 py-1 border border-slate-gray text-silver-mist hover:border-marker-blue text-sm transition-colors"
+            >
+              Archive
+            </Link>
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="px-3 py-1 border border-slate-gray text-silver-mist hover:border-marker-blue text-sm transition-colors"
+            >
+              {showForm ? "Cancel" : "+ New"}
+            </button>
+          </div>
         }
       />
 

@@ -9,7 +9,7 @@ export async function GET() {
   if (authError) return authError;
 
   const ideas = await prisma.idea.findMany({
-    where: { episodeId: null },
+    where: { episodeId: null, archivedAt: null },
     include: { links: { select: { id: true, url: true, title: true, crawlStatus: true } } },
     orderBy: [{ voteScore: "desc" }, { createdAt: "desc" }],
   });
