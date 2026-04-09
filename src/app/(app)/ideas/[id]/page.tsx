@@ -40,6 +40,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
   const [saving, setSaving] = useState(false);
   const [showAssign, setShowAssign] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [polishing, setPolishing] = useState(false);
 
   const loadIdea = useCallback(async () => {
     const res = await fetch(`/api/ideas/${id}`);
@@ -139,6 +140,17 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
     setShowAssign(true);
   }
 
+  async function polishNotes() {
+    setPolishing(true);
+    const res = await fetch(`/api/ideas/${id}/polish`, { method: "POST" });
+    if (res.ok) {
+      const data = await res.json();
+      setNotes(data.notes);
+      setIdea((prev) => (prev ? { ...prev, notes: data.notes } : null));
+    }
+    setPolishing(false);
+  }
+
   if (!idea) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -213,7 +225,16 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
       <div className="px-4 space-y-6">
         {/* Notes */}
         <div>
-          <label className="text-xs text-silver-mist/60 uppercase tracking-wide">Notes</label>
+          <div className="flex items-center justify-between">
+            <label className="text-xs text-silver-mist/60 uppercase tracking-wide">Notes</label>
+            <button
+              onClick={polishNotes}
+              disabled={polishing || !notes.trim()}
+              className="px-2 py-0.5 border border-slate-gray text-silver-mist/60 hover:border-marker-blue hover:text-marker-blue text-xs transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              {polishing ? "Polishing..." : "Polish"}
+            </button>
+          </div>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
