@@ -43,6 +43,16 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
   const [showAssign, setShowAssign] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [polishing, setPolishing] = useState(false);
+  const [collapsedLinks, setCollapsedLinks] = useState<Set<string>>(new Set());
+
+  function toggleLink(linkId: string) {
+    setCollapsedLinks((prev) => {
+      const next = new Set(prev);
+      if (next.has(linkId)) next.delete(linkId);
+      else next.add(linkId);
+      return next;
+    });
+  }
 
   const loadIdea = useCallback(async () => {
     const res = await fetch(`/api/ideas/${id}`);
@@ -341,41 +351,55 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
           </form>
 
           <div className="mt-2 space-y-2">
-            {idea.links.map((link) => (
-              <div key={link.id} className="border border-slate-gray p-3">
-                <div className="flex items-start justify-between gap-2">
-                  <a
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-marker-blue text-sm hover:underline truncate flex-1"
-                  >
-                    {link.title || link.url}
-                  </a>
-                  <button
-                    onClick={() => deleteLink(link.id)}
-                    className="text-silver-mist/40 hover:text-accent-red text-xs shrink-0"
-                  >
-                    ✕
-                  </button>
-                </div>
-                {link.crawlStatus === "done" && link.summary && (
-                  <div className="text-xs text-silver-mist/70 mt-2 prose prose-invert prose-xs max-w-none [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_li]:my-0.5 [&_p]:my-1 [&_strong]:text-silver-mist">
-                    <ReactMarkdown>{link.summary}</ReactMarkdown>
+            {idea.links.map((link) => {
+              const collapsed = collapsedLinks.has(link.id);
+              return (
+                <div key={link.id} className="border border-slate-gray p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <button
+                      onClick={() => toggleLink(link.id)}
+                      className="text-silver-mist/60 hover:text-silver-mist text-lg leading-none shrink-0 w-6 text-center"
+                      aria-label={collapsed ? "Expand" : "Collapse"}
+                    >
+                      {collapsed ? "▸" : "▾"}
+                    </button>
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-marker-blue text-sm hover:underline truncate flex-1"
+                    >
+                      {link.title || link.url}
+                    </a>
+                    <button
+                      onClick={() => deleteLink(link.id)}
+                      className="text-silver-mist/40 hover:text-accent-red text-xs shrink-0"
+                    >
+                      ✕
+                    </button>
                   </div>
-                )}
-                {(link.crawlStatus === "pending" || link.crawlStatus === "crawling") && (
-                  <p className="text-xs text-silver-mist/40 mt-2 animate-pulse">
-                    Summarizing...
-                  </p>
-                )}
-                {link.crawlStatus === "failed" && (
-                  <p className="text-xs text-accent-red/70 mt-2">
-                    Failed to crawl
-                  </p>
-                )}
-              </div>
-            ))}
+                  {!collapsed && (
+                    <>
+                      {link.crawlStatus === "done" && link.summary && (
+                        <div className="text-xs text-silver-mist/70 mt-2 prose prose-invert prose-xs max-w-none [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_li]:my-0.5 [&_p]:my-1 [&_strong]:text-silver-mist">
+                          <ReactMarkdown>{link.summary}</ReactMarkdown>
+                        </div>
+                      )}
+                      {(link.crawlStatus === "pending" || link.crawlStatus === "crawling") && (
+                        <p className="text-xs text-silver-mist/40 mt-2 animate-pulse">
+                          Summarizing...
+                        </p>
+                      )}
+                      {link.crawlStatus === "failed" && (
+                        <p className="text-xs text-accent-red/70 mt-2">
+                          Failed to crawl
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
