@@ -12,6 +12,7 @@ model Idea {
   notes          String    @default("")
   voteScore      Int       @default(0)
   viewCount      Int       @default(0)
+  status         String    @default("backlog")
   lastTouchedAt  DateTime  @default(now())
   createdAt      DateTime  @default(now())
   archivedAt     DateTime?

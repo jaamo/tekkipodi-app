@@ -39,6 +39,9 @@ export async function PATCH(
   const data: Record<string, unknown> = { lastTouchedAt: new Date() };
   if (typeof body.title === "string") data.title = body.title.trim();
   if (typeof body.notes === "string") data.notes = body.notes;
+  if (typeof body.status === "string" && ["backlog", "in_progress", "done"].includes(body.status)) {
+    data.status = body.status;
+  }
 
   const idea = await prisma.idea.update({
     where: { id },

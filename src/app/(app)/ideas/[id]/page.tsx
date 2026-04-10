@@ -19,12 +19,15 @@ interface Episode {
   title: string;
 }
 
+type IdeaStatus = "backlog" | "in_progress" | "done";
+
 interface IdeaData {
   id: string;
   title: string;
   notes: string;
   voteScore: number;
   viewCount: number;
+  status: IdeaStatus;
   archivedAt: string | null;
   episodeId: string | null;
   links: LinkData[];
@@ -158,6 +161,16 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ linkIds: links.map((l) => l.id) }),
+    });
+  }
+
+  async function setStatus(status: IdeaStatus) {
+    if (!idea) return;
+    setIdea({ ...idea, status });
+    await fetch(`/api/ideas/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
     });
   }
 
@@ -344,6 +357,40 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
           >
             ▼ Down
           </button>
+        </div>
+
+        {/* Status */}
+        <div className="flex w-full">
+          {(
+            [
+              { value: "backlog", label: "Backlog", color: "accent-red" },
+              { value: "in_progress", label: "In progress", color: "accent-yellow" },
+              { value: "done", label: "Done", color: "accent-green" },
+            ] as { value: IdeaStatus; label: string; color: string }[]
+          ).map((s) => {
+            const active = idea.status === s.value;
+            return (
+              <button
+                key={s.value}
+                onClick={() => setStatus(s.value)}
+                className={`flex-1 py-2 border border-slate-gray text-sm transition-colors ${
+                  active
+                    ? s.value === "backlog"
+                      ? "bg-accent-red/20 border-accent-red text-accent-red"
+                      : s.value === "in_progress"
+                      ? "bg-accent-yellow/20 border-accent-yellow text-accent-yellow"
+                      : "bg-accent-green/20 border-accent-green text-accent-green"
+                    : s.value === "backlog"
+                    ? "text-silver-mist hover:border-accent-red hover:text-accent-red"
+                    : s.value === "in_progress"
+                    ? "text-silver-mist hover:border-accent-yellow hover:text-accent-yellow"
+                    : "text-silver-mist hover:border-accent-green hover:text-accent-green"
+                }`}
+              >
+                {s.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Links */}
