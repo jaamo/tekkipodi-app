@@ -5,13 +5,28 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import PageHeader from "@/components/layout/PageHeader";
 
+type IdeaStatus = "backlog" | "in_progress" | "done";
+
 interface IdeaInEpisode {
   id: string;
   title: string;
   notes: string;
   voteScore: number;
+  status: IdeaStatus;
   links: { id: string; url: string; title: string | null; summary: string | null }[];
 }
+
+const STATUS_COLOR: Record<IdeaStatus, string> = {
+  backlog: "bg-accent-red",
+  in_progress: "bg-accent-yellow",
+  done: "bg-accent-green",
+};
+
+const STATUS_LABEL: Record<IdeaStatus, string> = {
+  backlog: "Backlog",
+  in_progress: "In progress",
+  done: "Done",
+};
 
 interface EpisodeData {
   id: string;
@@ -226,12 +241,14 @@ export default function EpisodeDetailPage({ params }: { params: Promise<{ id: st
                 </div>
                 <Link
                   href={`/ideas/${idea.id}`}
-                  className="flex-1 min-w-0"
+                  className="flex-1 min-w-0 flex items-center gap-2"
                 >
+                  <span
+                    className={`w-2 h-2 rounded-full shrink-0 ${STATUS_COLOR[idea.status]}`}
+                    aria-label={STATUS_LABEL[idea.status]}
+                    title={STATUS_LABEL[idea.status]}
+                  />
                   <h3 className="text-white text-sm font-medium truncate">{idea.title}</h3>
-                  <span className="text-xs text-silver-mist/60">
-                    {idea.links.length} links · score {idea.voteScore}
-                  </span>
                 </Link>
                 <button
                   onClick={() => removeIdea(idea.id)}
