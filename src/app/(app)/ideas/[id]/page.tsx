@@ -39,6 +39,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
   const [notes, setNotes] = useState("");
   const [newUrl, setNewUrl] = useState("");
   const [saving, setSaving] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const [showAssign, setShowAssign] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [polishing, setPolishing] = useState(false);
@@ -77,13 +78,25 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
 
   async function saveNotes() {
     setSaving(true);
-    await fetch(`/api/ideas/${id}`, {
+    const res = await fetch(`/api/ideas/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, notes }),
     });
     setSaving(false);
+    if (res.ok) {
+      setIdea((prev) => (prev ? { ...prev, title, notes } : prev));
+      setJustSaved(true);
+    }
   }
+
+  useEffect(() => {
+    if (!justSaved) return;
+    const t = setTimeout(() => setJustSaved(false), 2000);
+    return () => clearTimeout(t);
+  }, [justSaved]);
+
+  const notesDirty = idea !== null && notes !== idea.notes;
 
   async function addLink(e: React.FormEvent) {
     e.preventDefault();
@@ -242,7 +255,16 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
         {/* Notes */}
         <div>
           <div className="flex items-center justify-between">
-            <label className="text-xs text-silver-mist/60 uppercase tracking-wide">Notes</label>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-silver-mist/60 uppercase tracking-wide">Notes</label>
+              {saving ? (
+                <span className="text-xs text-silver-mist/40">Saving...</span>
+              ) : notesDirty ? (
+                <span className="text-xs text-accent-red/70">Unsaved changes</span>
+              ) : justSaved ? (
+                <span className="text-xs text-marker-blue/70">Saved</span>
+              ) : null}
+            </div>
             <button
               onClick={polishNotes}
               disabled={polishing || !notes.trim()}
@@ -259,7 +281,6 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
             className="w-full mt-1 px-3 py-2 bg-transparent border border-slate-gray text-silver-mist placeholder:text-silver-mist/50 outline-none focus:border-marker-blue resize-y"
             placeholder="Add notes..."
           />
-          {saving && <span className="text-xs text-silver-mist/40">Saving...</span>}
         </div>
 
         {/* Vote */}
