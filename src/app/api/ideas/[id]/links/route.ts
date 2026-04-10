@@ -17,8 +17,9 @@ export async function POST(
     return NextResponse.json({ error: "URL is required" }, { status: 400 });
   }
 
+  const count = await prisma.link.count({ where: { ideaId: id } });
   const link = await prisma.link.create({
-    data: { url: url.trim(), ideaId: id },
+    data: { url: url.trim(), ideaId: id, position: count },
   });
 
   // Update lastTouchedAt

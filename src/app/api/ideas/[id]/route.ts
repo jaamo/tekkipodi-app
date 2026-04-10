@@ -18,7 +18,7 @@ export async function GET(
       lastTouchedAt: new Date(),
     },
     include: {
-      links: { orderBy: { createdAt: "asc" } },
+      links: { orderBy: [{ position: "asc" }, { createdAt: "asc" }] },
       chatMessages: { orderBy: { createdAt: "asc" } },
     },
   });

@@ -35,6 +35,7 @@ model Link {
   summary     String?
   crawlStatus String   @default("pending")
   rawContent  String?
+  position    Int      @default(0)
   createdAt   DateTime @default(now())
 
   ideaId      String

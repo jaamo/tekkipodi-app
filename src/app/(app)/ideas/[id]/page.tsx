@@ -145,6 +145,22 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
     loadIdea();
   }
 
+  async function moveLink(index: number, direction: "up" | "down") {
+    if (!idea) return;
+    const links = [...idea.links];
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= links.length) return;
+
+    [links[index], links[newIndex]] = [links[newIndex], links[index]];
+    setIdea({ ...idea, links });
+
+    await fetch(`/api/ideas/${id}/links/reorder`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ linkIds: links.map((l) => l.id) }),
+    });
+  }
+
   async function vote(direction: "up" | "down") {
     const res = await fetch(`/api/ideas/${id}/vote`, {
       method: "POST",
@@ -351,7 +367,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
           </form>
 
           <div className="mt-2 space-y-2">
-            {idea.links.map((link) => {
+            {idea.links.map((link, index) => {
               const collapsed = collapsedLinks.has(link.id);
               return (
                 <div key={link.id} className="border border-slate-gray p-3">
@@ -371,9 +387,28 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
                     >
                       {link.title || link.url}
                     </a>
+                    <div className="flex flex-col gap-1 shrink-0">
+                      <button
+                        onClick={() => moveLink(index, "up")}
+                        disabled={index === 0}
+                        className="text-silver-mist/60 hover:text-white text-base leading-none disabled:opacity-20"
+                        aria-label="Move up"
+                      >
+                        ▲
+                      </button>
+                      <button
+                        onClick={() => moveLink(index, "down")}
+                        disabled={index === idea.links.length - 1}
+                        className="text-silver-mist/60 hover:text-white text-base leading-none disabled:opacity-20"
+                        aria-label="Move down"
+                      >
+                        ▼
+                      </button>
+                    </div>
                     <button
                       onClick={() => deleteLink(link.id)}
-                      className="text-silver-mist/40 hover:text-accent-red text-xs shrink-0"
+                      className="text-silver-mist/60 hover:text-accent-red text-lg leading-none shrink-0 px-1"
+                      aria-label="Delete link"
                     >
                       ✕
                     </button>
