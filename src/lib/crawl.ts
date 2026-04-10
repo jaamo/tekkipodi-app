@@ -30,11 +30,11 @@ export async function crawlAndSummarize(linkId: string, url: string) {
     const anthropic = new Anthropic();
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 500,
+      max_tokens: 2000,
       messages: [
         {
           role: "user",
-          content: `Tee tiivistelmä tästä artikkelista podcast-tutkimusmuistiinpanoa varten suomeksi. Keskity keskeisiin väitteisiin, kiinnostaviin näkökulmiin ja keskustelun arvoisiin pointteihin. Pidä tiivistelmä lyhyenä (3-5 bulletpointia). Vastaa aina suomeksi riippumatta artikkelin kielestä. Käytä markdown-muotoilua. Aloita listat markdown-syntaksilla - -merkillä.\n\nOtsikko: ${article.title}\n\n${article.textContent.slice(0, 8000)}`,
+          content: `Tee tiivistelmä tästä artikkelista podcast-tutkimusmuistiinpanoa varten suomeksi. Keskity keskeisiin väitteisiin, kiinnostaviin näkökulmiin ja keskustelun arvoisiin pointteihin. Pidä tiivistelmä lyhyenä (3-5 bulletpointia). Vastaa aina suomeksi riippumatta artikkelin kielestä. Käytä markdown-muotoilua. Aloita listat markdown-syntaksilla - -merkillä.\n\nOtsikko: ${article.title}\n\n${article.textContent.slice(0, 20000)}`,
         },
       ],
     });
