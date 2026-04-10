@@ -98,18 +98,36 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
 
   const notesDirty = idea !== null && notes !== idea.notes;
 
-  async function addLink(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newUrl.trim()) return;
+  async function submitLink(url: string) {
+    const trimmed = url.trim();
+    if (!trimmed) return;
 
     await fetch(`/api/ideas/${id}/links`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: newUrl.trim() }),
+      body: JSON.stringify({ url: trimmed }),
     });
 
     setNewUrl("");
     loadIdea();
+  }
+
+  async function addLink(e: React.FormEvent) {
+    e.preventDefault();
+    submitLink(newUrl);
+  }
+
+  function handlePaste(e: React.ClipboardEvent<HTMLInputElement>) {
+    const pasted = e.clipboardData.getData("text").trim();
+    if (!pasted) return;
+    try {
+      const parsed = new URL(pasted);
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return;
+      e.preventDefault();
+      submitLink(pasted);
+    } catch {
+      // not a valid URL — fall through to default paste behavior
+    }
   }
 
   async function deleteLink(linkId: string) {
@@ -310,6 +328,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
               type="url"
               value={newUrl}
               onChange={(e) => setNewUrl(e.target.value)}
+              onPaste={handlePaste}
               placeholder="https://..."
               className="flex-1 px-3 py-2 bg-transparent border border-slate-gray text-silver-mist placeholder:text-silver-mist/50 outline-none focus:border-marker-blue"
             />
