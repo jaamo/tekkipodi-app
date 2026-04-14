@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 import PageHeader from "@/components/layout/PageHeader";
 
 type IdeaStatus = "backlog" | "in_progress" | "done";
@@ -121,7 +122,7 @@ export default function EpisodeDetailPage({ params }: { params: Promise<{ id: st
               onClick={() => setShowNotes(!showNotes)}
               className="px-3 py-1 border border-slate-gray text-silver-mist hover:border-marker-blue text-sm transition-colors"
             >
-              {showNotes ? "Ideas" : "Notes"}
+              {showNotes ? "Ideas" : "Recording view"}
             </button>
             <button
               onClick={() => setShowDeleteConfirm(true)}
@@ -177,7 +178,7 @@ export default function EpisodeDetailPage({ params }: { params: Promise<{ id: st
         </div>
 
         {showNotes ? (
-          /* Combined Notes View */
+          /* Recording View */
           <div className="space-y-6">
             {episode.ideas.length === 0 && (
               <p className="text-silver-mist/50 text-center py-8">No ideas in this episode yet.</p>
@@ -201,7 +202,9 @@ export default function EpisodeDetailPage({ params }: { params: Promise<{ id: st
                           {link.title || link.url}
                         </a>
                         {link.summary && (
-                          <p className="text-silver-mist/60 mt-1">{link.summary}</p>
+                          <div className="text-silver-mist/60 mt-1 prose prose-invert prose-xs max-w-none [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_li]:my-0.5 [&_p]:my-1 [&_strong]:text-silver-mist">
+                            <ReactMarkdown>{link.summary}</ReactMarkdown>
+                          </div>
                         )}
                       </div>
                     ))}
@@ -209,6 +212,25 @@ export default function EpisodeDetailPage({ params }: { params: Promise<{ id: st
                 )}
               </div>
             ))}
+            {episode.ideas.some((idea) => idea.links.length > 0) && (
+              <div className="pt-4 border-t border-silver-mist/10">
+                <h3 className="text-white font-medium mb-2">All links</h3>
+                <ul className="space-y-1 list-disc pl-4">
+                  {episode.ideas.flatMap((idea) => idea.links).map((link) => (
+                    <li key={link.id} className="text-xs">
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-marker-blue hover:underline break-all"
+                      >
+                        {link.title || link.url}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         ) : (
           /* Ideas List View */
