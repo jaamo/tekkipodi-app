@@ -38,11 +38,17 @@ export async function PATCH(
   if (authError) return authError;
 
   const { id } = await params;
-  const { title, episodeNumber } = await request.json();
+  const { title, episodeNumber, status } = await request.json();
 
-  const data: { title?: string; episodeNumber?: number } = {};
+  const data: { title?: string; episodeNumber?: number; status?: string } = {};
   if (title !== undefined) data.title = title.trim();
   if (episodeNumber !== undefined) data.episodeNumber = episodeNumber;
+  if (status !== undefined) {
+    if (status !== "draft" && status !== "recorded") {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    }
+    data.status = status;
+  }
 
   const episode = await prisma.episode.update({
     where: { id },

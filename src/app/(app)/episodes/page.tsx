@@ -4,10 +4,13 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/layout/PageHeader";
 
+type EpisodeStatus = "draft" | "recorded";
+
 interface Episode {
   id: string;
   episodeNumber: number;
   title: string;
+  status: EpisodeStatus;
   ideaCount: number;
   createdAt: string;
 }
@@ -84,21 +87,27 @@ export default function EpisodesPage() {
             No episodes yet. Tap &quot;+ New&quot; to create one.
           </p>
         )}
-        {episodes.map((episode) => (
-          <Link
-            key={episode.id}
-            href={`/episodes/${episode.id}`}
-            className="block border border-slate-gray p-3 transition-colors hover:border-silver-mist/30"
-          >
-            <h3 className="text-white font-medium">
-              <span className="text-silver-mist/60 mr-2">#{episode.episodeNumber}</span>
-              {episode.title}
-            </h3>
-            <span className="text-xs text-silver-mist/60">
-              {episode.ideaCount} {episode.ideaCount === 1 ? "idea" : "ideas"}
-            </span>
-          </Link>
-        ))}
+        {episodes.map((episode) => {
+          const recorded = episode.status === "recorded";
+          return (
+            <Link
+              key={episode.id}
+              href={`/episodes/${episode.id}`}
+              className={`block border border-slate-gray p-3 transition-colors hover:border-silver-mist/30 ${
+                recorded ? "opacity-40" : ""
+              }`}
+            >
+              <h3 className="text-white font-medium">
+                <span className="text-silver-mist/60 mr-2">#{episode.episodeNumber}</span>
+                {episode.title}
+              </h3>
+              <span className="text-xs text-silver-mist/60">
+                {episode.ideaCount} {episode.ideaCount === 1 ? "idea" : "ideas"}
+                {recorded && <span className="ml-2">· recorded</span>}
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

@@ -49,6 +49,7 @@ model Episode {
   id            String   @id @default(cuid())
   episodeNumber Int      @unique
   title         String
+  status        String   @default("draft")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

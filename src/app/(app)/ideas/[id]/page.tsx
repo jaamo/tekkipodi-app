@@ -17,6 +17,7 @@ interface LinkData {
 interface Episode {
   id: string;
   title: string;
+  status: "draft" | "recorded";
 }
 
 type IdeaStatus = "backlog" | "in_progress" | "done";
@@ -207,7 +208,10 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
 
   async function loadEpisodes() {
     const res = await fetch("/api/episodes");
-    if (res.ok) setEpisodes(await res.json());
+    if (res.ok) {
+      const data: Episode[] = await res.json();
+      setEpisodes(data.filter((ep) => ep.status !== "recorded"));
+    }
     setShowAssign(true);
   }
 

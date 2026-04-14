@@ -7,6 +7,7 @@ import ReactMarkdown from "react-markdown";
 import PageHeader from "@/components/layout/PageHeader";
 
 type IdeaStatus = "backlog" | "in_progress" | "done";
+type EpisodeStatus = "draft" | "recorded";
 
 interface IdeaInEpisode {
   id: string;
@@ -33,6 +34,7 @@ interface EpisodeData {
   id: string;
   episodeNumber: number;
   title: string;
+  status: EpisodeStatus;
   ideas: IdeaInEpisode[];
 }
 
@@ -94,6 +96,15 @@ export default function EpisodeDetailPage({ params }: { params: Promise<{ id: st
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ideaIds: ideas.map((i) => i.id) }),
+    });
+    loadEpisode();
+  }
+
+  async function setStatus(status: EpisodeStatus) {
+    await fetch(`/api/episodes/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
     });
     loadEpisode();
   }
@@ -282,6 +293,31 @@ export default function EpisodeDetailPage({ params }: { params: Promise<{ id: st
             ))}
           </div>
         )}
+
+        {/* Episode status */}
+        <div className="flex w-full mt-6">
+          {(
+            [
+              { value: "draft", label: "Draft" },
+              { value: "recorded", label: "Recorded" },
+            ] as { value: EpisodeStatus; label: string }[]
+          ).map((s) => {
+            const active = episode.status === s.value;
+            return (
+              <button
+                key={s.value}
+                onClick={() => setStatus(s.value)}
+                className={`flex-1 py-2 border border-slate-gray text-sm transition-colors ${
+                  active
+                    ? "bg-marker-blue/20 border-marker-blue text-marker-blue"
+                    : "text-silver-mist hover:border-marker-blue hover:text-marker-blue"
+                }`}
+              >
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
