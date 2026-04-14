@@ -7,13 +7,14 @@ export async function GET() {
   if (authError) return authError;
 
   const episodes = await prisma.episode.findMany({
-    include: { ideas: { select: { id: true } } },
+    include: { ideas: { select: { id: true, status: true } } },
     orderBy: { episodeNumber: "desc" },
   });
 
   const result = episodes.map((ep) => ({
     ...ep,
     ideaCount: ep.ideas.length,
+    doneCount: ep.ideas.filter((i) => i.status === "done").length,
     ideas: undefined,
   }));
 

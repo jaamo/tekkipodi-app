@@ -12,6 +12,7 @@ interface Episode {
   title: string;
   status: EpisodeStatus;
   ideaCount: number;
+  doneCount: number;
   createdAt: string;
 }
 
@@ -102,7 +103,8 @@ export default function EpisodesPage() {
                 {episode.title}
               </h3>
               <span className="text-xs text-silver-mist/60">
-                {episode.ideaCount} {episode.ideaCount === 1 ? "idea" : "ideas"}
+                {episode.doneCount}/{episode.ideaCount}{" "}
+                {episode.ideaCount === 1 ? "idea" : "ideas"} complete
                 {recorded && <span className="ml-2">· recorded</span>}
               </span>
             </Link>
