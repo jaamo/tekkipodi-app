@@ -416,6 +416,12 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
           <div className="mt-2 space-y-2">
             {idea.links.map((link, index) => {
               const collapsed = collapsedLinks.has(link.id);
+              let domain = "";
+              try {
+                domain = new URL(link.url).hostname.replace(/^www\./, "");
+              } catch {
+                // ignore invalid URL
+              }
               return (
                 <div key={link.id} className="border border-slate-gray p-3">
                   <div className="flex items-start justify-between gap-2">
@@ -426,14 +432,19 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
                     >
                       {collapsed ? "▸" : "▾"}
                     </button>
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-marker-blue text-sm hover:underline truncate flex-1"
-                    >
-                      {link.title || link.url}
-                    </a>
+                    <div className="flex-1 min-w-0">
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-marker-blue text-sm hover:underline truncate block"
+                      >
+                        {link.title || link.url}
+                      </a>
+                      {domain && (
+                        <span className="text-xs text-silver-mist/50 truncate block">{domain}</span>
+                      )}
+                    </div>
                     <div className="flex flex-col gap-1 shrink-0">
                       <button
                         onClick={() => moveLink(index, "up")}
