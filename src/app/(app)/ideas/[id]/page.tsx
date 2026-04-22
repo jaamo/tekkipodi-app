@@ -338,7 +338,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             onBlur={saveNotes}
-            rows={6}
+            rows={12}
             className="w-full mt-1 px-3 py-2 bg-transparent border border-slate-gray text-silver-mist placeholder:text-silver-mist/50 outline-none focus:border-marker-blue resize-y"
             placeholder="Add notes..."
           />
