@@ -3,6 +3,23 @@ import { Readability } from "@mozilla/readability";
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "./prisma";
 
+async function summarize(title: string | null, textContent: string) {
+  const anthropic = new Anthropic();
+  const titleLine = title ? `Otsikko: ${title}\n\n` : "";
+  const message = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 2000,
+    messages: [
+      {
+        role: "user",
+        content: `Tee tiivistelmä tästä artikkelista podcast-tutkimusmuistiinpanoa varten suomeksi. Keskity keskeisiin väitteisiin, kiinnostaviin näkökulmiin ja keskustelun arvoisiin pointteihin. Pidä tiivistelmä lyhyenä (3-5 bulletpointia). Vastaa aina suomeksi riippumatta artikkelin kielestä. Käytä markdown-muotoilua. Aloita listat markdown-syntaksilla - -merkillä.\n\n${titleLine}${textContent.slice(0, 20000)}`,
+      },
+    ],
+  });
+
+  return message.content[0].type === "text" ? message.content[0].text : "";
+}
+
 export async function crawlAndSummarize(linkId: string, url: string) {
   try {
     await prisma.link.update({
@@ -27,20 +44,7 @@ export async function crawlAndSummarize(linkId: string, url: string) {
       return;
     }
 
-    const anthropic = new Anthropic();
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 2000,
-      messages: [
-        {
-          role: "user",
-          content: `Tee tiivistelmä tästä artikkelista podcast-tutkimusmuistiinpanoa varten suomeksi. Keskity keskeisiin väitteisiin, kiinnostaviin näkökulmiin ja keskustelun arvoisiin pointteihin. Pidä tiivistelmä lyhyenä (3-5 bulletpointia). Vastaa aina suomeksi riippumatta artikkelin kielestä. Käytä markdown-muotoilua. Aloita listat markdown-syntaksilla - -merkillä.\n\nOtsikko: ${article.title}\n\n${article.textContent.slice(0, 20000)}`,
-        },
-      ],
-    });
-
-    const summary =
-      message.content[0].type === "text" ? message.content[0].text : "";
+    const summary = await summarize(article.title ?? null, article.textContent);
 
     await prisma.link.update({
       where: { id: linkId },
@@ -53,6 +57,33 @@ export async function crawlAndSummarize(linkId: string, url: string) {
     });
   } catch (error) {
     console.error(`Crawl failed for ${url}:`, error);
+    await prisma.link.update({
+      where: { id: linkId },
+      data: { crawlStatus: "failed" },
+    });
+  }
+}
+
+export async function summarizeManualContent(linkId: string, content: string) {
+  try {
+    await prisma.link.update({
+      where: { id: linkId },
+      data: { crawlStatus: "crawling" },
+    });
+
+    const link = await prisma.link.findUnique({ where: { id: linkId } });
+    const summary = await summarize(link?.title ?? null, content);
+
+    await prisma.link.update({
+      where: { id: linkId },
+      data: {
+        summary,
+        rawContent: content.slice(0, 20000),
+        crawlStatus: "done",
+      },
+    });
+  } catch (error) {
+    console.error(`Manual summarize failed for link ${linkId}:`, error);
     await prisma.link.update({
       where: { id: linkId },
       data: { crawlStatus: "failed" },

@@ -48,6 +48,8 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [polishing, setPolishing] = useState(false);
   const [collapsedLinks, setCollapsedLinks] = useState<Set<string>>(new Set());
+  const [pasteLinkId, setPasteLinkId] = useState<string | null>(null);
+  const [pasteContent, setPasteContent] = useState("");
 
   function toggleLink(linkId: string) {
     setCollapsedLinks((prev) => {
@@ -56,6 +58,29 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
       else next.add(linkId);
       return next;
     });
+  }
+
+  function openPaste(linkId: string) {
+    setPasteLinkId(linkId);
+    setPasteContent("");
+  }
+
+  function cancelPaste() {
+    setPasteLinkId(null);
+    setPasteContent("");
+  }
+
+  async function submitPaste(linkId: string) {
+    const trimmed = pasteContent.trim();
+    if (!trimmed) return;
+    await fetch(`/api/ideas/${id}/links/${linkId}/content`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: trimmed }),
+    });
+    setPasteLinkId(null);
+    setPasteContent("");
+    loadIdea();
   }
 
   const loadIdea = useCallback(async () => {
@@ -491,6 +516,43 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
                         <p className="text-xs text-accent-red/70 mt-2">
                           Failed to crawl
                         </p>
+                      )}
+                      {pasteLinkId === link.id ? (
+                        <div className="mt-2 space-y-2">
+                          <textarea
+                            value={pasteContent}
+                            onChange={(e) => setPasteContent(e.target.value)}
+                            rows={8}
+                            autoFocus
+                            placeholder="Paste article text..."
+                            className="w-full px-3 py-2 bg-transparent border border-slate-gray text-silver-mist placeholder:text-silver-mist/50 outline-none focus:border-marker-blue resize-y text-xs"
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <button
+                              onClick={cancelPaste}
+                              className="px-3 py-1 border border-slate-gray text-silver-mist hover:border-silver-mist text-xs transition-colors"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => submitPaste(link.id)}
+                              disabled={!pasteContent.trim()}
+                              className="px-3 py-1 border border-slate-gray text-silver-mist hover:border-marker-blue text-xs transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              Summarize
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        link.crawlStatus !== "pending" &&
+                        link.crawlStatus !== "crawling" && (
+                          <button
+                            onClick={() => openPaste(link.id)}
+                            className="mt-2 text-xs text-silver-mist/60 hover:text-marker-blue transition-colors"
+                          >
+                            Paste content
+                          </button>
+                        )
                       )}
                     </>
                   )}
